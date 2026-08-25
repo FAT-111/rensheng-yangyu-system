@@ -1,0 +1,16 @@
+{
+  "name": "人生养育系统",
+  "short_name": "人生养育",
+  "description": "个人健康、自我照顾与成长管理",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f8f9fb",
+  "theme_color": "#4f46e5",
+  "lang": "zh-CN",
+  "icons": [{
+    "src": "icon.svg",
+    "sizes": "any",
+    "type": "image/svg+xml",
+    "purpose": "any maskable"
+  }]
+}

@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>人生养育系统</title>
+<meta name="theme-color" content="#4f46e5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="人生养育">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
@@ -31,6 +38,25 @@
   .slider-track::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #4f46e5; cursor: pointer; }
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  html, body { min-width: 0; max-width: 100%; overflow-x: hidden; }
+  *, *::before, *::after { box-sizing: border-box; }
+  button, input, select, textarea { max-width: 100%; min-width: 0; }
+  .page { width: 100%; max-width: 100%; }
+  .profile-form-row { min-width: 0; }
+  .profile-form-row > * { min-width: 0; }
+  .todo-entry-row { display: grid; grid-template-columns: minmax(0, 1fr) 78px auto; align-items: stretch; }
+  .period-entry-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px 72px auto; align-items: stretch; }
+  .todo-item-main { min-width: 0; overflow-wrap: anywhere; }
+  .todo-item-delete { flex-shrink: 0; }
+  @media (max-width: 640px) {
+    body { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+    .page { padding-left: 12px; padding-right: 12px; }
+    .todo-entry-row { grid-template-columns: minmax(0, 1fr) 78px auto; }
+    .period-entry-row { grid-template-columns: minmax(0, 1fr) 58px 66px; }
+    .period-entry-row button { grid-column: 1 / -1; width: 100%; }
+    .card { border-radius: 14px; }
+    input, select, textarea, button { touch-action: manipulation; }
+  }
   .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 60; align-items: center; justify-content: center; padding: 16px; }
   .modal.show { display: flex; }
   .modal-bottom { align-items: flex-end; }
@@ -273,7 +299,7 @@
   <div class="card p-4">
     <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">🩸 月经记录</h3>
     <div class="space-y-3">
-      <div class="flex gap-2">
+      <div class="period-entry-row profile-form-row gap-2">
         <input type="date" id="periodStart" class="flex-1 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200">
         <input type="number" id="periodDays" placeholder="天数" class="w-20 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200">
         <select id="periodFlow" class="p-3 bg-gray-50 rounded-xl text-sm border border-gray-200">
@@ -303,8 +329,8 @@
   <div class="card p-4">
     <h3 class="font-bold text-gray-900 mb-3">待办检查</h3>
     <div class="space-y-2" id="todoList"></div>
-    <div class="flex gap-2 mt-3 border-t pt-3">
-      <input type="text" id="newTodoText" placeholder="添加新待办..." class="flex-1 p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
+    <div class="todo-entry-row profile-form-row gap-2 mt-3 border-t pt-3">
+      <input type="text" id="newTodoText" placeholder="添加新待办..." class="p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
       <select id="newTodoPriority" class="p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
         <option value="urgent">紧急</option>
         <option value="week">本周</option>
@@ -1335,7 +1361,7 @@ function renderTodos() {
   const priorityText = { urgent: '紧急', week: '本周', suggest: '建议' };
   const sorted = [...data.todos].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
   document.getElementById('todoList').innerHTML = sorted.map(t => 
-    `<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodo(${t.id})" class="todo-checkbox"><div class="flex-1"><span class="text-sm ${t.done ? 'line-through text-gray-400' : 'text-gray-700'}">${t.text}</span><span class="text-xs ml-2 px-1.5 py-0.5 rounded bg-${priorityColor[t.priority]}-100 text-${priorityColor[t.priority]}-700">${priorityText[t.priority]}</span></div><button onclick="deleteTodo(${t.id})" class="text-xs text-red-400 px-2 py-1 bg-red-50 rounded check-anim">删除</button></div>`
+    `<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodo(${t.id})" class="todo-checkbox"><div class="flex-1 todo-item-main"><span class="text-sm ${t.done ? 'line-through text-gray-400' : 'text-gray-700'}">${t.text}</span><span class="text-xs ml-2 px-1.5 py-0.5 rounded bg-${priorityColor[t.priority]}-100 text-${priorityColor[t.priority]}-700">${priorityText[t.priority]}</span></div><button onclick="deleteTodo(${t.id})" class="todo-item-delete text-xs text-red-400 px-2 py-1 bg-red-50 rounded check-anim">删除</button></div>`
   ).join('');
 }
 
@@ -1442,6 +1468,11 @@ function renderGrow() {
 loadData();
 renderHome();
 lucide.createIcons();
+
+// 让“添加到主屏幕”后以独立应用方式打开，并缓存基础页面壳。
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
 
 </script>
 </body>
