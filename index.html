@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>人生养育系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+  body { font-family: 'Noto Sans SC', sans-serif; background: #f8f9fb; -webkit-tap-highlight-color: transparent; }
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .card { background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .nav-item { transition: all 0.2s; }
+  .nav-item.active { color: #4f46e5; }
+  .nav-item.active .nav-icon { transform: translateY(-2px); }
+  .check-anim { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+  .check-anim:active { transform: scale(0.92); }
+  .progress-ring circle { transition: stroke-dashoffset 0.5s ease; }
+  .meditation-breath { animation: breathe 4s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { transform: scale(1); opacity: 0.1; } 50% { transform: scale(1.2); opacity: 0.2; } }
+  .bar-fill { transition: height 0.5s ease, width 0.5s ease; }
+  .milestone-pop { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .tab-btn { transition: all 0.2s; }
+  .tab-btn.active { background: #e0e7ff; color: #4f46e5; font-weight: 500; }
+  input, textarea, select { -webkit-appearance: none; outline: none; }
+  .slider-track { -webkit-appearance: none; height: 6px; border-radius: 3px; background: #e5e7eb; }
+  .slider-track::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #4f46e5; cursor: pointer; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 60; align-items: center; justify-content: center; padding: 16px; }
+  .modal.show { display: flex; }
+  .modal-bottom { align-items: flex-end; }
+  .modal-bottom.show { display: flex; }
+  .symptom-checkbox { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border: 2px solid #d1d5db; border-radius: 4px; background: white; cursor: pointer; position: relative; flex-shrink: 0; }
+  .symptom-checkbox:checked { background: #4f46e5; border-color: #4f46e5; }
+  .symptom-checkbox:checked::after { content: "✓"; color: white; font-size: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  .todo-checkbox { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border: 2px solid #d1d5db; border-radius: 50%; background: white; cursor: pointer; position: relative; flex-shrink: 0; }
+  .todo-checkbox:checked { background: #22c55e; border-color: #22c55e; }
+  .todo-checkbox:checked::after { content: "✓"; color: white; font-size: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+</style>
+<base target="_blank">
+</head>
+<body class="text-gray-800 pb-20">
+
+<!-- ==================== 首页 ==================== -->
+<div id="page-home" class="page active space-y-4 p-4">
+  <div class="flex justify-between items-center mb-2">
+    <div><p class="text-sm text-gray-500" id="currentDate"></p><h1 class="text-2xl font-bold text-gray-900">今天也要加油 💪</h1></div>
+    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">我</div>
+  </div>
+  <div class="card p-5 bg-gradient-to-br from-blue-500 to-blue-600 text-white relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10"></div>
+    <div class="flex justify-between items-start relative z-10">
+      <div><p class="text-blue-100 text-sm font-medium">今日健康指数</p><h2 class="text-4xl font-bold mt-1" id="healthScore">72</h2><p class="text-blue-100 text-xs mt-1" id="scoreChange">比昨天 ↑ 5分</p></div>
+      <div class="relative w-16 h-16">
+        <svg class="progress-ring w-16 h-16" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" stroke="rgba(255,255,255,0.2)" stroke-width="4" fill="none"/><circle id="scoreRing" cx="24" cy="24" r="20" stroke="white" stroke-width="4" fill="none" stroke-dasharray="125.6" stroke-dashoffset="35" stroke-linecap="round"/></svg>
+        <span class="absolute inset-0 flex items-center justify-center text-xs font-bold" id="scoreLabel">良好</span>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-4 relative z-10">
+      <div class="flex-1 bg-white/20 rounded-lg p-2 text-center backdrop-blur-sm"><p class="text-xs text-blue-100">饮食</p><p class="font-bold text-sm" id="dietProgress">0/3</p></div>
+      <div class="flex-1 bg-white/20 rounded-lg p-2 text-center backdrop-blur-sm"><p class="text-xs text-blue-100">运动</p><p class="font-bold text-sm" id="exerciseProgress">0/30′</p></div>
+      <div class="flex-1 bg-white/20 rounded-lg p-2 text-center backdrop-blur-sm"><p class="text-xs text-blue-100">补剂</p><p class="font-bold text-sm" id="suppProgress">0/5</p></div>
+      <div class="flex-1 bg-white/20 rounded-lg p-2 text-center backdrop-blur-sm"><p class="text-xs text-blue-100">打坐</p><p class="font-bold text-sm" id="meditateProgress">0/1</p></div>
+    </div>
+  </div>
+  <div class="card p-4">
+    <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2"><i data-lucide="baby" class="w-5 h-5 text-pink-500"></i>今日养育清单<span class="text-xs text-gray-400 font-normal ml-auto">像照顾小孩一样照顾自己</span></h3>
+    <div class="space-y-3" id="nurtureList">
+      <div class="flex items-center gap-3 p-3 bg-orange-50 rounded-xl"><div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 text-xs font-bold">身</div><div class="flex-1"><p class="text-sm font-medium text-gray-900">身体</p><p class="text-xs text-gray-500" id="nurtureBody">今天吃好了吗？药吃了吗？</p></div><span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500" id="nurtureBodyStatus">待完成</span></div>
+      <div class="flex items-center gap-3 p-3 bg-pink-50 rounded-xl"><div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 text-xs font-bold">心</div><div class="flex-1"><p class="text-sm font-medium text-gray-900">情绪</p><p class="text-xs text-gray-500">有好好跟自己说话吗？</p></div><button onclick="openMoodPicker()" class="text-xs px-3 py-1.5 rounded-full bg-white border border-pink-200 text-pink-600 check-anim" id="moodBtn">记录心情</button></div>
+      <div class="flex items-center gap-3 p-3 bg-green-50 rounded-xl"><div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs font-bold">物</div><div class="flex-1"><p class="text-sm font-medium text-gray-900">物质</p><p class="text-xs text-gray-500">有给未来的自己存安全感吗？</p></div><button onclick="quickSave()" class="text-xs px-3 py-1.5 rounded-full bg-white border border-green-200 text-green-600 check-anim">存一笔</button></div>
+      <div class="flex items-center gap-3 p-3 bg-indigo-50 rounded-xl"><div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold">神</div><div class="flex-1"><p class="text-sm font-medium text-gray-900">精神</p><p class="text-xs text-gray-500">有学习或体验新事物吗？</p></div><span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500" id="nurtureSpiritStatus">待完成</span></div>
+    </div>
+    <button onclick="finishNurture()" id="finishNurtureBtn" class="w-full mt-4 py-3 rounded-xl bg-gray-100 text-gray-400 text-sm font-medium transition-all">今日养育完成确认</button>
+  </div>
+  <div class="card p-4">
+    <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2"><i data-lucide="trending-up" class="w-5 h-5 text-green-500"></i>本周趋势</h3>
+    <div class="flex items-end justify-between h-24 gap-2" id="weekChart"></div>
+    <div class="flex justify-between text-xs text-gray-400 mt-2"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+  </div>
+  <div class="card p-4 bg-amber-50 border border-amber-200">
+    <div class="flex items-start gap-3"><i data-lucide="alert-circle" class="w-5 h-5 text-amber-600 mt-0.5 shrink-0"></i><div><p class="font-semibold text-amber-900 text-sm">重要提醒</p><p class="text-xs text-amber-700 mt-1">甲状腺结节5类需尽快外科就诊，完成穿刺/手术评估。</p></div></div>
+  </div>
+</div>
+
+<!-- ==================== 健康页 ==================== -->
+<div id="page-health" class="page space-y-4 p-4">
+  <div class="flex justify-between items-center mb-2"><h1 class="text-2xl font-bold text-gray-900">健康管理</h1><span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">桥本+IR友好</span></div>
+  <div class="flex gap-2 bg-gray-100 p-1 rounded-xl overflow-x-auto hide-scrollbar">
+    <button onclick="switchHealthTab('diet')" id="tab-diet" class="tab-btn flex-1 py-2 rounded-lg text-sm active whitespace-nowrap">饮食</button>
+    <button onclick="switchHealthTab('supps')" id="tab-supps" class="tab-btn flex-1 py-2 rounded-lg text-sm whitespace-nowrap">补剂</button>
+    <button onclick="switchHealthTab('exercise')" id="tab-exercise" class="tab-btn flex-1 py-2 rounded-lg text-sm whitespace-nowrap">运动</button>
+    <button onclick="switchHealthTab('manage')" id="tab-manage" class="tab-btn flex-1 py-2 rounded-lg text-sm whitespace-nowrap">管理</button>
+  </div>
+
+  <div id="health-diet" class="space-y-4">
+    <div id="dietCards"></div>
+    <div class="card p-4"><h3 class="font-bold text-gray-900 mb-3">饮食原则</h3><div class="grid grid-cols-2 gap-2 text-xs"><div class="p-2 bg-red-50 text-red-700 rounded-lg">❌ 精制糖/甜食</div><div class="p-2 bg-red-50 text-red-700 rounded-lg">❌ 白米白面</div><div class="p-2 bg-red-50 text-red-700 rounded-lg">❌ 油炸食品</div><div class="p-2 bg-red-50 text-red-700 rounded-lg">❌ 麸质（尝试戒2周）</div><div class="p-2 bg-green-50 text-green-700 rounded-lg">✅ 深海鱼/坚果</div><div class="p-2 bg-green-50 text-green-700 rounded-lg">✅ 深色蔬菜</div><div class="p-2 bg-green-50 text-green-700 rounded-lg">✅ 发酵食品</div><div class="p-2 bg-green-50 text-green-700 rounded-lg">✅ 优质蛋白</div></div></div>
+  </div>
+
+  <div id="health-supps" class="space-y-4 hidden">
+    <div class="card p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100"><p class="text-sm text-blue-800 font-medium">💡 服用提示</p><p class="text-xs text-blue-600 mt-1">结节5类未处理前：暂停L-谷氨酰胺和硒。优先使用益生菌、VD、鱼油、镁、锌。</p></div>
+    <div class="space-y-3" id="suppList"></div>
+  </div>
+
+  <div id="health-exercise" class="space-y-4 hidden">
+    <div class="card p-4"><div class="flex justify-between items-center mb-4"><div><p class="text-sm text-gray-500">今日目标</p><p class="text-xl font-bold text-gray-900">30分钟</p></div><div class="text-right"><p class="text-sm text-gray-500">已完成</p><p class="text-xl font-bold text-blue-600" id="exerciseDone">0分钟</p></div></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="exerciseBar" class="bg-blue-500 h-2 rounded-full transition-all" style="width:0%"></div></div></div>
+    <div class="space-y-3" id="exerciseList"></div>
+    <div class="card p-4"><h3 class="font-bold text-gray-900 mb-3 text-sm">今日记录 <span class="text-xs text-gray-400 font-normal">（点删除可撤销）</span></h3><div id="exerciseLog" class="space-y-2 text-sm text-gray-600"><p class="text-gray-400 text-xs italic">暂无记录</p></div></div>
+    <div class="card p-4 bg-amber-50 border border-amber-200"><p class="text-xs text-amber-800"><i data-lucide="alert-triangle" class="w-3 h-3 inline mr-1"></i><b>注意：</b>不要一上来就高强度运动。甲减+肾上腺疲劳状态下，过度运动反而升高皮质醇，抑制甲状腺。</p></div>
+  </div>
+
+  <div id="health-manage" class="space-y-4 hidden">
+    <div class="card p-4">
+      <h3 class="font-bold text-gray-900 mb-3">📚 菜谱库管理</h3>
+      <div class="flex gap-2 mb-3"><button onclick="setManageTab('breakfast')" id="m-tab-breakfast" class="tab-btn flex-1 py-1.5 rounded-lg text-xs active">早餐</button><button onclick="setManageTab('lunch')" id="m-tab-lunch" class="tab-btn flex-1 py-1.5 rounded-lg text-xs">午餐</button><button onclick="setManageTab('dinner')" id="m-tab-dinner" class="tab-btn flex-1 py-1.5 rounded-lg text-xs">晚餐</button></div>
+      <div id="recipeManageList" class="space-y-2 mb-3 max-h-60 overflow-y-auto"></div>
+      <div class="space-y-2 border-t pt-3">
+        <input type="text" id="newRecipeName" placeholder="菜谱名称" class="w-full p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
+        <input type="text" id="newRecipeTime" placeholder="时间，如 7:00-9:00" class="w-full p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
+        <div id="newRecipeItems" class="space-y-2"></div>
+        <button onclick="addRecipeItemInput()" class="text-xs text-blue-600 check-anim">+ 添加食材</button>
+        <input type="text" id="newRecipeSupp" placeholder="补剂提示（可选）" class="w-full p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
+        <button onclick="addRecipe()" class="w-full py-2 bg-blue-500 text-white rounded-lg text-sm font-medium check-anim">添加菜谱</button>
+      </div>
+    </div>
+    <div class="card p-4">
+      <h3 class="font-bold text-gray-900 mb-3">💊 补剂管理</h3>
+      <div id="suppManageList" class="space-y-2 mb-3"></div>
+      <div class="flex gap-2 border-t pt-3">
+        <input type="text" id="newSuppName" placeholder="补剂名称" class="flex-1 p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
+        <input type="text" id="newSuppDose" placeholder="剂量" class="flex-1 p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
+        <select id="newSuppStatus" class="p-2 bg-gray-50 rounded-lg text-sm border border-gray-200"><option value="safe">可用</option><option value="warn">暂缓</option><option value="stop">暂停</option></select>
+        <button onclick="addSupp()" class="px-3 bg-blue-500 text-white rounded-lg text-sm check-anim">添加</button>
+      </div>
+    </div>
+    <div class="card p-4">
+      <h3 class="font-bold text-gray-900 mb-3">🏃 运动管理</h3>
+      <div id="exerciseManageList" class="space-y-2 mb-3"></div>
+      <div class="flex gap-2 border-t pt-3">
+        <input type="text" id="newExName" placeholder="运动名称" class="flex-1 p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
+        <input type="number" id="newExMin" placeholder="分钟" class="w-20 p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
+        <button onclick="addExercise()" class="px-3 bg-blue-500 text-white rounded-lg text-sm check-anim">添加</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 修心页 ==================== -->
+<div id="page-mind" class="page space-y-4 p-4">
+  <h1 class="text-2xl font-bold text-gray-900 mb-2">修心记录</h1>
+  <div class="flex gap-2 bg-gray-100 p-1 rounded-xl">
+    <button onclick="switchMindTab('meditate')" id="tab-meditate" class="tab-btn flex-1 py-2 rounded-lg text-sm active">打坐</button>
+    <button onclick="switchMindTab('diary')" id="tab-diary" class="tab-btn flex-1 py-2 rounded-lg text-sm">日记</button>
+  </div>
+  <div id="mind-meditate" class="space-y-4">
+    <div class="card p-6 text-center relative overflow-hidden">
+      <div class="absolute inset-0 flex items-center justify-center opacity-10"><div id="breathCircle" class="w-48 h-48 rounded-full bg-blue-400 meditation-breath hidden"></div></div>
+      <div class="relative z-10">
+        <div class="text-5xl font-bold text-gray-900 font-mono mb-2" id="timerDisplay">15:00</div>
+        <p class="text-sm text-gray-500 mb-6" id="timerStatus">准备开始</p>
+        <div class="flex justify-center gap-4">
+          <button onclick="startTimer()" id="btnStart" class="w-14 h-14 rounded-full bg-blue-500 text-white flex items-center justify-center check-anim"><i data-lucide="play" class="w-6 h-6"></i></button>
+          <button onclick="pauseTimer()" id="btnPause" class="w-14 h-14 rounded-full bg-amber-500 text-white flex items-center justify-center hidden check-anim"><i data-lucide="pause" class="w-6 h-6"></i></button>
+          <button onclick="resetTimer()" class="w-14 h-14 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center check-anim"><i data-lucide="rotate-ccw" class="w-6 h-6"></i></button>
+        </div>
+        <div class="flex justify-center gap-2 mt-6">
+          <button onclick="setTimer(10)" class="px-3 py-1 rounded-full bg-gray-100 text-xs text-gray-600">10分</button>
+          <button onclick="setTimer(15)" class="px-3 py-1 rounded-full bg-blue-100 text-xs text-blue-600 font-medium">15分</button>
+          <button onclick="setTimer(20)" class="px-3 py-1 rounded-full bg-gray-100 text-xs text-gray-600">20分</button>
+          <button onclick="setTimer(30)" class="px-3 py-1 rounded-full bg-gray-100 text-xs text-gray-600">30分</button>
+        </div>
+      </div>
+    </div>
+    <div class="card p-4">
+      <h3 class="font-bold text-gray-900 mb-3 text-sm">本月目标</h3>
+      <div class="flex justify-between items-center mb-2"><span class="text-sm text-gray-600">打坐天数</span><span class="text-sm font-bold text-gray-900"><span id="monthDays">0</span>/30天</span></div>
+      <div class="w-full bg-gray-200 rounded-full h-2 mb-4"><div id="monthBar" class="bg-indigo-500 h-2 rounded-full transition-all" style="width:0%"></div></div>
+      <div class="flex justify-between items-center mb-2"><span class="text-sm text-gray-600">累计时长</span><span class="text-sm font-bold text-gray-900"><span id="totalHours">0</span>小时</span></div>
+      <div class="w-full bg-gray-200 rounded-full h-2"><div id="hoursBar" class="bg-purple-500 h-2 rounded-full transition-all" style="width:0%"></div></div>
+      <div class="mt-4 p-3 bg-indigo-50 rounded-lg"><p class="text-xs text-indigo-700">"打坐不是逃避，而是给心灵一个安顿的所在。"</p></div>
+    </div>
+    <div class="card p-4"><h3 class="font-bold text-gray-900 mb-3 text-sm">最近记录</h3><div id="meditationHistory" class="space-y-2"><p class="text-gray-400 text-xs italic">暂无记录</p></div></div>
+    <div class="card p-4"><h3 class="font-bold text-gray-900 mb-3 text-sm">成长曲线（近7天分钟数）</h3><div class="flex items-end justify-between h-32 gap-1" id="meditationChart"></div></div>
+  </div>
+  <div id="mind-diary" class="space-y-4 hidden">
+    <div class="card p-4">
+      <h3 class="font-bold text-gray-900 mb-3">今日三行</h3>
+      <div class="space-y-3">
+        <div><label class="text-xs text-gray-500 mb-1 block">身体感觉</label><input type="text" id="diaryBody" placeholder="今天身体感觉怎么样？" class="w-full p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"></div>
+        <div><label class="text-xs text-gray-500 mb-1 block">情绪颜色</label><div class="flex gap-2 flex-wrap" id="emotionColors"><button onclick="setEmotion('🔴')" class="w-10 h-10 rounded-full bg-red-100 text-lg check-anim">🔴</button><button onclick="setEmotion('🟠')" class="w-10 h-10 rounded-full bg-orange-100 text-lg check-anim">🟠</button><button onclick="setEmotion('🟡')" class="w-10 h-10 rounded-full bg-yellow-100 text-lg check-anim">🟡</button><button onclick="setEmotion('🟢')" class="w-10 h-10 rounded-full bg-green-100 text-lg check-anim">🟢</button><button onclick="setEmotion('🔵')" class="w-10 h-10 rounded-full bg-blue-100 text-lg check-anim">🔵</button><button onclick="setEmotion('🟣')" class="w-10 h-10 rounded-full bg-purple-100 text-lg check-anim">🟣</button><button onclick="setEmotion('🩶')" class="w-10 h-10 rounded-full bg-gray-100 text-lg check-anim">🩶</button></div><p class="text-xs text-gray-400 mt-1" id="selectedEmotion">未选择</p></div>
+        <div><label class="text-xs text-gray-500 mb-1 block">一件小事</label><input type="text" id="diaryThing" placeholder="今天有一件值得记录的小事吗？" class="w-full p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"></div>
+        <button onclick="saveDiaryManual()" class="w-full py-3 bg-pink-500 text-white rounded-xl text-sm font-medium check-anim">💾 保存今日日记</button>
+      </div>
+    </div>
+    <div class="card p-4"><h3 class="font-bold text-gray-900 mb-3 text-sm">近期记录</h3><div id="diaryHistory" class="space-y-3"><p class="text-gray-400 text-xs italic">暂无记录</p></div></div>
+  </div>
+</div>
+
+<!-- ==================== 成长页 ==================== -->
+<div id="page-grow" class="page space-y-4 p-4">
+  <h1 class="text-2xl font-bold text-gray-900 mb-2">成长养育</h1>
+  <div class="flex gap-2 bg-gray-100 p-1 rounded-xl overflow-x-auto hide-scrollbar">
+    <button onclick="switchGrowTab('savings')" id="tab-savings" class="tab-btn flex-1 py-2 rounded-lg text-sm active whitespace-nowrap">存钱罐</button>
+    <button onclick="switchGrowTab('wishes')" id="tab-wishes" class="tab-btn flex-1 py-2 rounded-lg text-sm whitespace-nowrap">愿望清单</button>
+    <button onclick="switchGrowTab('growth')" id="tab-growth" class="tab-btn flex-1 py-2 rounded-lg text-sm whitespace-nowrap">成长计划</button>
+  </div>
+
+  <div id="grow-savings" class="space-y-4">
+    <div class="card p-5 bg-gradient-to-br from-green-500 to-emerald-600 text-white relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-10 -mt-10"></div>
+      <p class="text-green-100 text-sm">总储蓄</p>
+      <h2 class="text-3xl font-bold mt-1">¥<span id="totalSavings">0</span></h2>
+      <p class="text-green-100 text-xs mt-1">目标 ¥<span id="totalSavingsTarget">70000</span></p>
+      <div class="w-full bg-white/20 rounded-full h-2 mt-4"><div id="totalSavingsBar" class="bg-white h-2 rounded-full transition-all" style="width:0%"></div></div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="card p-4"><div class="flex items-center gap-2 mb-2"><div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center"><i data-lucide="shield" class="w-4 h-4 text-blue-600"></i></div><span class="text-sm font-bold">安全感基金</span></div><p class="text-2xl font-bold text-gray-900">¥<span id="safetyFund">0</span></p><p class="text-xs text-gray-500">目标 ¥50,000</p><div class="w-full bg-gray-200 rounded-full h-1.5 mt-2"><div id="safetyBar" class="bg-blue-500 h-1.5 rounded-full transition-all" style="width:0%"></div></div></div>
+      <div class="card p-4"><div class="flex items-center gap-2 mb-2"><div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center"><i data-lucide="plane" class="w-4 h-4 text-purple-600"></i></div><span class="text-sm font-bold">看世界基金</span></div><p class="text-2xl font-bold text-gray-900">¥<span id="travelFund">0</span></p><p class="text-xs text-gray-500">目标 ¥20,000</p><div class="w-full bg-gray-200 rounded-full h-1.5 mt-2"><div id="travelBar" class="bg-purple-500 h-1.5 rounded-full transition-all" style="width:0%"></div></div></div>
+    </div>
+    <div class="card p-4">
+      <h3 class="font-bold text-gray-900 mb-3">存一笔</h3>
+      <div class="flex gap-2 mb-3"><button onclick="fillSaveAmount(10)" class="flex-1 py-2 bg-gray-100 rounded-lg text-sm check-anim">¥10</button><button onclick="fillSaveAmount(50)" class="flex-1 py-2 bg-gray-100 rounded-lg text-sm check-anim">¥50</button><button onclick="fillSaveAmount(100)" class="flex-1 py-2 bg-gray-100 rounded-lg text-sm check-anim">¥100</button><button onclick="fillSaveAmount(200)" class="flex-1 py-2 bg-gray-100 rounded-lg text-sm check-anim">¥200</button></div>
+      <div class="flex gap-2"><input type="number" id="customSaveAmount" placeholder="自定义金额" class="flex-1 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"><select id="saveTarget" class="p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"><option value="safety">安全感基金</option><option value="travel">看世界基金</option></select><button onclick="addCustomSaving()" class="px-4 bg-green-500 text-white rounded-xl text-sm font-medium check-anim">存入</button></div>
+    </div>
+    <div class="card p-4">
+      <h3 class="font-bold text-gray-900 mb-3 text-sm">存入记录 <span class="text-xs text-gray-400 font-normal">（点击删除可回滚金额）</span></h3>
+      <div id="savingsLog" class="space-y-2 text-sm"><p class="text-gray-400 text-xs italic">暂无记录</p></div>
+    </div>
+  </div>
+
+  <div id="grow-wishes" class="space-y-4 hidden">
+    <div class="card p-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100"><p class="text-sm text-pink-800 font-medium">✨ 愿望清单</p><p class="text-xs text-pink-600 mt-1">写下你想带自己去的地方、想体验的事，一步步存钱实现它。</p></div>
+    <div id="wishList" class="space-y-3"></div>
+    <div class="card p-4">
+      <h3 class="font-bold text-gray-900 mb-3">添加新愿望</h3>
+      <div class="space-y-3"><input type="text" id="wishName" placeholder="愿望名称，比如：去大理看洱海" class="w-full p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"><input type="text" id="wishDesc" placeholder="简单描述，为什么想去？" class="w-full p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"><div class="flex gap-2"><input type="number" id="wishTarget" placeholder="预计花费（元）" class="flex-1 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"><input type="date" id="wishDeadline" class="flex-1 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"></div><button onclick="addWish()" class="w-full py-3 bg-pink-500 text-white rounded-xl text-sm font-medium check-anim">添加愿望</button></div>
+    </div>
+  </div>
+
+  <div id="grow-growth" class="space-y-4 hidden">
+    <div class="card p-4"><h3 class="font-bold text-gray-900 mb-3">本周目标</h3><div id="weekGoals" class="space-y-2"></div><div class="flex gap-2 mt-3"><input type="text" id="weekGoalInput" placeholder="添加本周小目标..." class="flex-1 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"><button onclick="addGoal('week')" class="px-4 bg-indigo-500 text-white rounded-xl text-sm check-anim">添加</button></div></div>
+    <div class="card p-4"><h3 class="font-bold text-gray-900 mb-3">本月目标</h3><div id="monthGoals" class="space-y-2"></div><div class="flex gap-2 mt-3"><input type="text" id="monthGoalInput" placeholder="添加本月目标..." class="flex-1 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"><button onclick="addGoal('month')" class="px-4 bg-indigo-500 text-white rounded-xl text-sm check-anim">添加</button></div></div>
+    <div class="card p-4"><h3 class="font-bold text-gray-900 mb-3">今年展望</h3><div id="yearGoals" class="space-y-2"></div><div class="flex gap-2 mt-3"><input type="text" id="yearGoalInput" placeholder="添加今年想达成的事..." class="flex-1 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200"><button onclick="addGoal('year')" class="px-4 bg-indigo-500 text-white rounded-xl text-sm check-anim">添加</button></div></div>
+    <div class="card p-4 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-100"><h3 class="font-bold text-gray-900 mb-2 text-sm">🎉 养育里程碑</h3><p class="text-xs text-gray-600">里程碑会在你达成时惊喜出现，不是压力清单。</p><div id="milestonesList" class="mt-3 space-y-2"></div></div>
+  </div>
+</div>
+
+<!-- ==================== 我的页 ==================== -->
+<div id="page-profile" class="page space-y-4 p-4">
+  <h1 class="text-2xl font-bold text-gray-900 mb-2">我的档案</h1>
+  <div class="card p-4">
+    <div class="flex items-center gap-4 mb-4"><div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">我</div><div><h3 class="font-bold text-gray-900">健康调理中</h3><p class="text-xs text-gray-500">38岁 · 桥本+IR管理</p></div></div>
+    <div class="grid grid-cols-2 gap-3 text-center"><div class="p-3 bg-gray-50 rounded-lg"><p class="text-lg font-bold text-gray-900">160cm</p><p class="text-xs text-gray-500">身高</p></div><div class="p-3 bg-gray-50 rounded-lg"><p class="text-lg font-bold text-gray-900" id="currentWeightDisplay">--</p><p class="text-xs text-gray-500">当前体重(kg)</p></div></div>
+  </div>
+
+  <div class="card p-4">
+    <h3 class="font-bold text-gray-900 mb-3">⚖️ 体重记录</h3>
+    <div class="flex gap-2 mb-3">
+      <input type="number" id="weightInput" placeholder="今日体重(kg)" step="0.1" class="flex-1 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200">
+      <button onclick="recordWeight()" class="px-4 bg-blue-500 text-white rounded-xl text-sm font-medium check-anim">记录</button>
+    </div>
+    <div class="flex items-end justify-between h-32 gap-1" id="weightChart"></div>
+    <div class="flex justify-between text-xs text-gray-400 mt-1" id="weightChartLabels"></div>
+  </div>
+
+  <!-- 月经记录 -->
+  <div class="card p-4">
+    <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">🩸 月经记录</h3>
+    <div class="space-y-3">
+      <div class="flex gap-2">
+        <input type="date" id="periodStart" class="flex-1 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200">
+        <input type="number" id="periodDays" placeholder="天数" class="w-20 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200">
+        <select id="periodFlow" class="p-3 bg-gray-50 rounded-xl text-sm border border-gray-200">
+          <option value="">量</option>
+          <option value="light">少</option>
+          <option value="normal">正常</option>
+          <option value="heavy">多</option>
+        </select>
+        <button onclick="addPeriod()" class="px-4 bg-pink-500 text-white rounded-xl text-sm font-medium check-anim">记录</button>
+      </div>
+      <div id="periodList" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <div class="card p-4">
+    <h3 class="font-bold text-gray-900 mb-3">健康标签</h3>
+    <div class="flex flex-wrap gap-2">
+      <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs">甲状腺结节5类</span>
+      <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">桥本甲状腺炎</span>
+      <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs">胰岛素抵抗</span>
+      <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">脑雾</span>
+      <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">疑似肠漏</span>
+    </div>
+  </div>
+
+  <!-- 待办检查 -->
+  <div class="card p-4">
+    <h3 class="font-bold text-gray-900 mb-3">待办检查</h3>
+    <div class="space-y-2" id="todoList"></div>
+    <div class="flex gap-2 mt-3 border-t pt-3">
+      <input type="text" id="newTodoText" placeholder="添加新待办..." class="flex-1 p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
+      <select id="newTodoPriority" class="p-2 bg-gray-50 rounded-lg text-sm border border-gray-200">
+        <option value="urgent">紧急</option>
+        <option value="week">本周</option>
+        <option value="suggest">建议</option>
+      </select>
+      <button onclick="addTodo()" class="px-3 bg-blue-500 text-white rounded-lg text-sm check-anim">添加</button>
+    </div>
+  </div>
+
+  <!-- 症状追踪 -->
+  <div class="card p-4">
+    <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2"><i data-lucide="activity" class="w-5 h-5 text-red-500"></i>症状追踪</h3>
+    <div class="space-y-4">
+      <div><div class="flex justify-between text-xs text-gray-500 mb-1"><span>疲劳程度</span><span id="fatigueVal">5</span></div><input type="range" min="1" max="10" value="5" class="slider-track w-full" id="fatigueSlider" oninput="updateSlider('fatigue', this.value)"></div>
+      <div><div class="flex justify-between text-xs text-gray-500 mb-1"><span>脑雾程度</span><span id="fogVal">5</span></div><input type="range" min="1" max="10" value="5" class="slider-track w-full" id="fogSlider" oninput="updateSlider('fog', this.value)"></div>
+      <div><div class="flex justify-between text-xs text-gray-500 mb-1"><span>肠道状况</span><span id="gutVal">5</span></div><input type="range" min="1" max="10" value="5" class="slider-track w-full" id="gutSlider" oninput="updateSlider('gut', this.value)"></div>
+      <div><div class="flex justify-between text-xs text-gray-500 mb-1"><span>睡眠质量</span><span id="sleepVal">5</span></div><input type="range" min="1" max="10" value="5" class="slider-track w-full" id="sleepSlider" oninput="updateSlider('sleep', this.value)"></div>
+
+      <!-- 饮食诱因 - 使用button代替checkbox避免点击冲突 -->
+      <div>
+        <p class="text-xs text-gray-500 mb-2">饮食诱因（点击切换）</p>
+        <div class="grid grid-cols-3 gap-2" id="symptomTriggers">
+          <button onclick="toggleTrigger('gluten')" id="btn-gluten" class="p-2 bg-gray-50 rounded-lg text-xs text-gray-600 border border-gray-200 check-anim">🌾 吃了麸质</button>
+          <button onclick="toggleTrigger('dairy')" id="btn-dairy" class="p-2 bg-gray-50 rounded-lg text-xs text-gray-600 border border-gray-200 check-anim">🥛 吃了乳制品</button>
+          <button onclick="toggleTrigger('sugar')" id="btn-sugar" class="p-2 bg-gray-50 rounded-lg text-xs text-gray-600 border border-gray-200 check-anim">🍬 吃了高糖</button>
+          <button onclick="toggleTrigger('soy')" id="btn-soy" class="p-2 bg-gray-50 rounded-lg text-xs text-gray-600 border border-gray-200 check-anim">🫘 吃了大豆</button>
+          <button onclick="toggleTrigger('alcohol')" id="btn-alcohol" class="p-2 bg-gray-50 rounded-lg text-xs text-gray-600 border border-gray-200 check-anim">🍷 饮酒</button>
+          <button onclick="toggleTrigger('coffee')" id="btn-coffee" class="p-2 bg-gray-50 rounded-lg text-xs text-gray-600 border border-gray-200 check-anim">☕ 喝咖啡</button>
+        </div>
+      </div>
+
+      <div><div class="flex justify-between text-xs text-gray-500 mb-1"><span>压力水平</span><span id="stressVal">5</span></div><input type="range" min="1" max="10" value="5" class="slider-track w-full" id="stressSlider" oninput="updateSlider('stress', this.value)"></div>
+      <button onclick="saveSymptomManual()" class="w-full py-3 bg-red-500 text-white rounded-xl text-sm font-medium check-anim">记录今日症状</button>
+    </div>
+  </div>
+
+  <div class="card p-4">
+    <h3 class="font-bold text-gray-900 mb-3">数据管理</h3>
+    <div class="space-y-2">
+      <button onclick="exportData()" class="w-full py-3 bg-blue-50 text-blue-600 rounded-xl text-sm font-medium check-anim flex items-center justify-center gap-2"><i data-lucide="download" class="w-4 h-4"></i>导出所有数据（JSON）</button>
+      <button onclick="resetAllData()" class="w-full py-3 text-sm text-red-500 bg-red-50 rounded-xl font-medium check-anim">重置所有数据</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 底部导航 ==================== -->
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-2 z-50">
+  <div class="flex justify-around items-center h-16">
+    <button onclick="switchPage('home')" class="nav-item active flex flex-col items-center gap-0.5 w-16" data-page="home"><i data-lucide="home" class="nav-icon w-5 h-5 transition-transform"></i><span class="text-[10px]">首页</span></button>
+    <button onclick="switchPage('health')" class="nav-item flex flex-col items-center gap-0.5 w-16 text-gray-400" data-page="health"><i data-lucide="heart-pulse" class="nav-icon w-5 h-5 transition-transform"></i><span class="text-[10px]">健康</span></button>
+    <button onclick="switchPage('mind')" class="nav-item flex flex-col items-center gap-0.5 w-16 text-gray-400" data-page="mind"><i data-lucide="sparkles" class="nav-icon w-5 h-5 transition-transform"></i><span class="text-[10px]">修心</span></button>
+    <button onclick="switchPage('grow')" class="nav-item flex flex-col items-center gap-0.5 w-16 text-gray-400" data-page="grow"><i data-lucide="sprout" class="nav-icon w-5 h-5 transition-transform"></i><span class="text-[10px]">成长</span></button>
+    <button onclick="switchPage('profile')" class="nav-item flex flex-col items-center gap-0.5 w-16 text-gray-400" data-page="profile"><i data-lucide="user" class="nav-icon w-5 h-5 transition-transform"></i><span class="text-[10px]">我的</span></button>
+  </div>
+</div>
+
+<!-- 里程碑弹窗 -->
+<div id="milestoneModal" class="modal">
+  <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center milestone-pop">
+    <div class="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-4"><i data-lucide="award" class="w-8 h-8 text-yellow-600"></i></div>
+    <h3 class="text-xl font-bold text-gray-900 mb-2">🎉 养育里程碑</h3>
+    <p class="text-gray-600 text-sm mb-4" id="milestoneText">恭喜达成新成就！</p>
+    <div class="p-3 bg-yellow-50 rounded-xl mb-4"><p class="text-xs text-yellow-800" id="milestoneEncourage">你今天把TA照顾得很好。</p></div>
+    <button onclick="closeMilestone()" class="w-full py-3 bg-gray-900 text-white rounded-xl text-sm font-medium">收下这份鼓励</button>
+  </div>
+</div>
+
+<!-- 心情选择弹窗 -->
+<div id="moodModal" class="modal modal-bottom">
+  <div class="bg-white rounded-2xl p-5 max-w-sm w-full">
+    <h3 class="font-bold text-gray-900 mb-4">今天的心情是？</h3>
+    <div class="grid grid-cols-4 gap-3 mb-4">
+      <button onclick="setMood('😊')" class="p-3 bg-gray-50 rounded-xl text-2xl check-anim">😊</button>
+      <button onclick="setMood('😌')" class="p-3 bg-gray-50 rounded-xl text-2xl check-anim">😌</button>
+      <button onclick="setMood('😐')" class="p-3 bg-gray-50 rounded-xl text-2xl check-anim">😐</button>
+      <button onclick="setMood('😔')" class="p-3 bg-gray-50 rounded-xl text-2xl check-anim">😔</button>
+      <button onclick="setMood('😤')" class="p-3 bg-gray-50 rounded-xl text-2xl check-anim">😤</button>
+      <button onclick="setMood('😴')" class="p-3 bg-gray-50 rounded-xl text-2xl check-anim">😴</button>
+      <button onclick="setMood('🥰')" class="p-3 bg-gray-50 rounded-xl text-2xl check-anim">🥰</button>
+      <button onclick="setMood('😵‍💫')" class="p-3 bg-gray-50 rounded-xl text-2xl check-anim">😵‍💫</button>
+    </div>
+    <button onclick="closeMoodPicker()" class="w-full py-3 bg-gray-100 text-gray-600 rounded-xl text-sm">取消</button>
+  </div>
+</div>
+
+<!-- 愿望存入记录弹窗 -->
+<div id="wishSavingsModal" class="modal modal-bottom">
+  <div class="bg-white rounded-2xl p-5 max-w-sm w-full">
+    <h3 class="font-bold text-gray-900 mb-3" id="wishSavingsTitle">存入记录</h3>
+    <div id="wishSavingsList" class="space-y-2 max-h-60 overflow-y-auto mb-4"></div>
+    <button onclick="closeWishSavings()" class="w-full py-3 bg-gray-100 text-gray-600 rounded-xl text-sm">关闭</button>
+  </div>
+</div>
+<script>
+// ==================== 默认数据 ====================
+function getDefaultData() {
+  return {
+    profile: { height: 160 },
+    today: {
+      date: new Date().toISOString().split('T')[0],
+      diet: { breakfast: false, lunch: false, dinner: false },
+      currentRecipes: { breakfast: 0, lunch: 0, dinner: 0 },
+      supps: {},
+      exercise: {},
+      meditate: { done: false, minutes: 0 },
+      mood: '',
+      diary: { body: '', emotion: '', thing: '' },
+      nurtureDone: false,
+      symptoms: null,
+      weight: null
+    },
+    recipes: {
+      breakfast: [
+        { id: 'b1', name: '标准早餐', time: '7:00-9:00', items: [{icon:'egg',text:'水煮蛋 1-2个',color:'text-orange-400'},{icon:'wheat',text:'红薯/山药 半根（约100g）',color:'text-yellow-500'},{icon:'nut',text:'核桃/杏仁 一小把（15g）',color:'text-amber-600'},{icon:'cup-soda',text:'无糖豆浆/酸奶 200ml',color:'text-blue-400'}], suppNote: '餐后服用：益生菌 + 维生素D3', suppColor: 'blue' }
+      ],
+      lunch: [
+        { id: 'l1', name: '标准午餐', time: '12:00-13:00', items: [{icon:'wheat',text:'杂粮饭 小半碗（熟重80g）',color:'text-yellow-500'},{icon:'fish',text:'清蒸鱼/虾仁/豆腐 1掌心',color:'text-blue-400'},{icon:'leaf',text:'橄榄油炒时蔬 2拳头',color:'text-green-500'}], suppNote: '随餐服用：Omega-3鱼油 + 消化酶', suppColor: 'blue' }
+      ],
+      dinner: [
+        { id: 'd1', name: '标准晚餐', time: '18:00-19:00', items: [{icon:'wheat',text:'杂粮饭 少量（比午餐少1/3）',color:'text-yellow-500'},{icon:'beef',text:'瘦肉/鱼肉/豆腐 1掌心',color:'text-red-400'},{icon:'carrot',text:'炒蔬菜 2拳头',color:'text-orange-400'}], suppNote: '', suppColor: 'amber', note: '晚餐必须有碳水，防夜间低血糖亢奋' }
+      ]
+    },
+    suppConfig: [
+      { id: 's1', key: 'probiotic', name: '益生菌', dose: '随早餐', status: 'safe', note: '空腹或随餐' },
+      { id: 's2', key: 'vd', name: '维生素D3', dose: '2000-4000IU', status: 'safe', note: '随脂餐吸收好' },
+      { id: 's3', key: 'fishoil', name: 'Omega-3鱼油', dose: '1-2粒', status: 'safe', note: '随餐，抗炎' },
+      { id: 's4', key: 'magnesium', name: '镁', dose: '200-400mg', status: 'safe', note: '睡前，助眠' },
+      { id: 's5', key: 'zinc', name: '锌', dose: '15-25mg', status: 'safe', note: '餐后，勿空腹' },
+      { id: 's6', key: 'selenium', name: '硒', dose: '200mcg', status: 'warn', note: '3-6月后需停' },
+      { id: 's7', key: 'glutamine', name: 'L-谷氨酰胺', dose: '暂停', status: 'stop', note: '等结节处理完' }
+    ],
+    exerciseConfig: [
+      { id: 'e1', key: 'swim', name: '游泳', icon: 'waves', color: 'blue', min: 30, label: '30-45分钟' },
+      { id: 'e2', key: 'strength', name: '力量训练', icon: 'dumbbell', color: 'purple', min: 25, label: '20-30分钟' },
+      { id: 'e3', key: 'walk', name: '饭后散步', icon: 'footprints', color: 'green', min: 15, label: '15-20分钟' },
+      { id: 'e4', key: 'yoga', name: '瑜伽/拉伸', icon: 'person-standing', color: 'orange', min: 20, label: '20分钟' }
+    ],
+    history: { healthScores: [], exercise: [], meditate: [], mood: [], diary: [], symptoms: [], savings: [], weight: [] },
+    savings: { safety: 0, travel: 0 },
+    wishes: [],
+    growth: { week: [], month: [], year: [] },
+    milestones: [],
+    todos: [
+      { id: 't1', text: '甲状腺外科就诊', priority: 'urgent', done: false },
+      { id: 't2', text: '内分泌科复查甲功', priority: 'week', done: false },
+      { id: 't3', text: '查维生素D/铁蛋白/锌', priority: 'suggest', done: false }
+    ],
+    periods: []
+  };
+}
+
+let data = getDefaultData();
+let timerInterval, timerSeconds = 900, timerRunning = false;
+let manageTab = 'breakfast';
+let activeWishId = null;
+
+// ==================== 数据持久化 ====================
+function loadData() {
+  const saved = localStorage.getItem('nurtureAppData');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    const today = new Date().toISOString().split('T')[0];
+    // 兼容旧数据结构
+    if (!parsed.recipes) { parsed.recipes = getDefaultData().recipes; parsed.suppConfig = getDefaultData().suppConfig; parsed.exerciseConfig = getDefaultData().exerciseConfig; }
+    if (!parsed.todos) parsed.todos = getDefaultData().todos;
+    if (!parsed.periods) parsed.periods = [];
+    if (!parsed.today.currentRecipes) parsed.today.currentRecipes = { breakfast: 0, lunch: 0, dinner: 0 };
+    if (!parsed.history.weight) parsed.history.weight = [];
+    if (!parsed.today.symptoms || !parsed.today.symptoms.triggers) {
+      if (parsed.today.symptoms) parsed.today.symptoms.triggers = {};
+    }
+    // 新的一天重置
+    if (parsed.today && parsed.today.date !== today) {
+      parsed.history.healthScores.push({ date: parsed.today.date, score: calcHealthScore(parsed.today) });
+      parsed.history.mood.push({ date: parsed.today.date, mood: parsed.today.mood });
+      if (parsed.today.diary && (parsed.today.diary.body || parsed.today.diary.emotion || parsed.today.diary.thing)) {
+        parsed.history.diary.push({ date: parsed.today.date, ...parsed.today.diary });
+      }
+      if (parsed.today.symptoms) parsed.history.symptoms.push({ date: parsed.today.date, ...parsed.today.symptoms });
+      if (parsed.today.weight) parsed.history.weight.push({ date: parsed.today.date, weight: parsed.today.weight });
+      const oldToday = parsed.today;
+      parsed.today = JSON.parse(JSON.stringify(getDefaultData().today));
+      parsed.today.date = today;
+      parsed.today.currentRecipes = oldToday.currentRecipes || { breakfast: 0, lunch: 0, dinner: 0 };
+    }
+    data = parsed;
+  }
+  data.suppConfig.forEach(s => { if (!(s.key in data.today.supps)) data.today.supps[s.key] = false; });
+  data.exerciseConfig.forEach(e => { if (!(e.key in data.today.exercise)) data.today.exercise[e.key] = 0; });
+  if (!data.today.symptoms) data.today.symptoms = { triggers: {} };
+  if (!data.today.symptoms.triggers) data.today.symptoms.triggers = {};
+  saveData();
+}
+
+function saveData() { localStorage.setItem('nurtureAppData', JSON.stringify(data)); }
+
+function calcHealthScore(today) {
+  let score = 50;
+  const dietDone = Object.values(today.diet).filter(Boolean).length;
+  score += dietDone * 8;
+  const safeKeys = data.suppConfig.filter(s => s.status === 'safe').map(s => s.key);
+  const suppDone = safeKeys.filter(k => today.supps[k]).length;
+  score += Math.min(suppDone, 5) * 3;
+  const exerciseMin = Object.values(today.exercise).reduce((a,b) => a+b, 0);
+  score += Math.min(exerciseMin, 30);
+  if (today.meditate.done) score += 10;
+  return Math.min(100, score);
+}
+
+// ==================== 页面切换 ====================
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active'); n.classList.add('text-gray-400');
+    if (n.dataset.page === page) { n.classList.add('active'); n.classList.remove('text-gray-400'); }
+  });
+  lucide.createIcons();
+  if (page === 'home') renderHome();
+  if (page === 'health') renderHealth();
+  if (page === 'mind') renderMind();
+  if (page === 'grow') renderGrow();
+  if (page === 'profile') renderProfile();
+}
+
+function switchHealthTab(tab) {
+  ['diet','supps','exercise','manage'].forEach(t => {
+    document.getElementById('health-' + t).classList.add('hidden');
+    document.getElementById('tab-' + t).classList.remove('active');
+  });
+  document.getElementById('health-' + tab).classList.remove('hidden');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'manage') renderManage();
+  lucide.createIcons();
+}
+
+function switchMindTab(tab) {
+  ['meditate','diary'].forEach(t => {
+    document.getElementById('mind-' + t).classList.add('hidden');
+    document.getElementById('tab-' + t).classList.remove('active');
+  });
+  document.getElementById('mind-' + tab).classList.remove('hidden');
+  document.getElementById('tab-' + tab).classList.add('active');
+  lucide.createIcons();
+}
+
+function switchGrowTab(tab) {
+  ['savings','wishes','growth'].forEach(t => {
+    document.getElementById('grow-' + t).classList.add('hidden');
+    document.getElementById('tab-' + t).classList.remove('active');
+  });
+  document.getElementById('grow-' + tab).classList.remove('hidden');
+  document.getElementById('tab-' + tab).classList.add('active');
+  lucide.createIcons();
+}
+
+// ==================== 首页 ====================
+function renderHome() {
+  const today = new Date();
+  document.getElementById('currentDate').textContent = `${today.getMonth()+1}月${today.getDate()}日 周${['日','一','二','三','四','五','六'][today.getDay()]}`;
+  const score = calcHealthScore(data.today);
+  document.getElementById('healthScore').textContent = score;
+  const offset = 125.6 - (125.6 * score / 100);
+  document.getElementById('scoreRing').style.strokeDashoffset = offset;
+  document.getElementById('scoreLabel').textContent = score >= 80 ? '优秀' : score >= 60 ? '良好' : '加油';
+  const dietDone = Object.values(data.today.diet).filter(Boolean).length;
+  document.getElementById('dietProgress').textContent = `${dietDone}/3`;
+  const exerciseMin = Object.values(data.today.exercise).reduce((a,b) => a+b, 0);
+  document.getElementById('exerciseProgress').textContent = `${exerciseMin}/30′`;
+  const safeKeys = data.suppConfig.filter(s => s.status === 'safe').map(s => s.key);
+  const suppDone = safeKeys.filter(k => data.today.supps[k]).length;
+  document.getElementById('suppProgress').textContent = `${suppDone}/5`;
+  document.getElementById('meditateProgress').textContent = `${data.today.meditate.done ? 1 : 0}/1`;
+  const bodyDone = dietDone >= 2 && suppDone >= 3;
+  document.getElementById('nurtureBodyStatus').textContent = bodyDone ? '已照顾' : '待完成';
+  document.getElementById('nurtureBodyStatus').className = `text-xs px-2 py-1 rounded-full ${bodyDone ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`;
+  const spiritDone = data.today.meditate.done || (data.today.diary && data.today.diary.thing);
+  document.getElementById('nurtureSpiritStatus').textContent = spiritDone ? '已滋养' : '待完成';
+  document.getElementById('nurtureSpiritStatus').className = `text-xs px-2 py-1 rounded-full ${spiritDone ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`;
+  const allDone = bodyDone && data.today.mood && spiritDone && !data.today.nurtureDone;
+  const btn = document.getElementById('finishNurtureBtn');
+  if (data.today.nurtureDone) {
+    btn.textContent = '✨ 今天你把TA照顾得很好';
+    btn.className = 'w-full mt-4 py-3 rounded-xl bg-pink-100 text-pink-600 text-sm font-medium transition-all';
+  } else {
+    btn.textContent = '今日养育完成确认';
+    btn.className = `w-full mt-4 py-3 rounded-xl text-sm font-medium transition-all ${allDone ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-400'}`;
+  }
+  const weekData = data.history.healthScores.slice(-7);
+  while (weekData.length < 7) weekData.unshift({ date: '', score: 50 });
+  const maxScore = Math.max(...weekData.map(d => d.score), 100);
+  document.getElementById('weekChart').innerHTML = weekData.map(d => {
+    const h = Math.round((d.score / maxScore) * 80);
+    return `<div class="flex-1 flex flex-col items-center justify-end gap-1"><div class="w-full bg-blue-500 rounded-t-md bar-fill" style="height:${h}%"></div></div>`;
+  }).join('');
+}
+
+function finishNurture() {
+  const dietDone = Object.values(data.today.diet).filter(Boolean).length;
+  const safeKeys = data.suppConfig.filter(s => s.status === 'safe').map(s => s.key);
+  const suppDone = safeKeys.filter(k => data.today.supps[k]).length;
+  const bodyDone = dietDone >= 2 && suppDone >= 3;
+  const spiritDone = data.today.meditate.done || (data.today.diary && data.today.diary.thing);
+  if (bodyDone && data.today.mood && spiritDone) {
+    data.today.nurtureDone = true; saveData(); renderHome(); checkMilestones();
+  }
+}
+
+// ==================== 健康-饮食 ====================
+function renderDietCards() {
+  const meals = ['breakfast','lunch','dinner'];
+  const icons = { breakfast: 'sunrise', lunch: 'sun', dinner: 'moon' };
+  const colors = { breakfast: 'orange', lunch: 'yellow', dinner: 'indigo' };
+  const names = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐' };
+  document.getElementById('dietCards').innerHTML = meals.map(meal => {
+    const idx = data.today.currentRecipes[meal] || 0;
+    const recipes = data.recipes[meal] || [];
+    const recipe = recipes[idx] || recipes[0] || { name: '未设置', time: '', items: [], suppNote: '', suppColor: 'blue', note: '' };
+    const done = data.today.diet[meal];
+    const itemHtml = recipe.items.map(it => `<div class="flex items-center gap-2 text-sm text-gray-700"><i data-lucide="${it.icon}" class="w-4 h-4 ${it.color}"></i><span>${it.text}</span></div>`).join('');
+    const suppHtml = recipe.suppNote ? `<div class="mt-3 p-2 bg-${recipe.suppColor}-50 rounded-lg text-xs text-${recipe.suppColor}-700"><i data-lucide="info" class="w-3 h-3 inline mr-1"></i>${recipe.suppNote}</div>` : '';
+    const noteHtml = recipe.note ? `<div class="mt-3 p-2 bg-amber-50 rounded-lg text-xs text-amber-700"><i data-lucide="alert-triangle" class="w-3 h-3 inline mr-1"></i>${recipe.note}</div>` : '';
+    const switchHtml = recipes.length > 1 ? `<button onclick="switchRecipe('${meal}')" class="text-xs text-blue-600 mt-2 check-anim">🔄 换一换 (${idx+1}/${recipes.length})</button>` : '';
+    return `<div class="card p-4 ${done ? 'bg-green-50/50' : ''}" id="${meal}Card">
+      <div class="flex justify-between items-start mb-3">
+        <div class="flex items-center gap-2"><div class="w-10 h-10 rounded-full bg-${colors[meal]}-100 flex items-center justify-center"><i data-lucide="${icons[meal]}" class="w-5 h-5 text-${colors[meal]}-500"></i></div><div><h3 class="font-bold text-gray-900">${names[meal]}：${recipe.name}</h3><p class="text-xs text-gray-500">${recipe.time}</p></div></div>
+        <button onclick="toggleMeal('${meal}')" id="btn-${meal}" class="check-anim w-8 h-8 rounded-full border-2 ${done ? 'bg-green-500 border-green-500' : 'border-gray-200'} flex items-center justify-center"><i data-lucide="check" class="w-4 h-4 ${done ? 'text-white' : 'text-gray-300'}"></i></button>
+      </div>
+      <div class="space-y-2">${itemHtml}</div>
+      ${suppHtml}${noteHtml}${switchHtml}
+    </div>`;
+  }).join('');
+}
+
+function switchRecipe(meal) {
+  const recipes = data.recipes[meal] || [];
+  let idx = (data.today.currentRecipes[meal] || 0) + 1;
+  if (idx >= recipes.length) idx = 0;
+  data.today.currentRecipes[meal] = idx;
+  saveData(); renderHealth();
+}
+
+function toggleMeal(meal) {
+  data.today.diet[meal] = !data.today.diet[meal];
+  saveData(); renderHome(); renderHealth(); checkMilestones();
+}
+
+function renderSupps() {
+  document.getElementById('suppList').innerHTML = data.suppConfig.map(s => {
+    const done = data.today.supps[s.key];
+    const statusColor = s.status === 'safe' ? 'green' : s.status === 'warn' ? 'yellow' : 'red';
+    const statusText = s.status === 'safe' ? '可用' : s.status === 'warn' ? '暂缓' : '暂停';
+    return `<div class="card p-4 flex items-center justify-between ${done ? 'bg-green-50/50' : ''}"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-${statusColor}-100 flex items-center justify-center"><span class="text-xs font-bold text-${statusColor}-600">${statusText}</span></div><div><h4 class="font-bold text-gray-900 text-sm">${s.name}</h4><p class="text-xs text-gray-500">${s.dose} · ${s.note}</p></div></div><button onclick="toggleSupp('${s.key}')" class="check-anim w-8 h-8 rounded-full border-2 ${done ? 'bg-green-500 border-green-500' : 'border-gray-200'} flex items-center justify-center"><i data-lucide="check" class="w-4 h-4 ${done ? 'text-white' : 'text-gray-300'}"></i></button></div>`;
+  }).join('');
+}
+
+function toggleSupp(key) {
+  data.today.supps[key] = !data.today.supps[key];
+  saveData(); renderHome(); renderHealth(); checkMilestones();
+}
+
+// ==================== 健康-运动（含删除功能）====================
+function renderExercise() {
+  const totalMin = Object.values(data.today.exercise).reduce((a,b) => a+b, 0);
+  document.getElementById('exerciseDone').textContent = totalMin + '分钟';
+  document.getElementById('exerciseBar').style.width = Math.min(totalMin / 30 * 100, 100) + '%';
+  document.getElementById('exerciseList').innerHTML = data.exerciseConfig.map(e => `<div class="card p-4 flex items-center justify-between"><div class="flex items-center gap-3"><div class="w-12 h-12 rounded-full bg-${e.color}-100 flex items-center justify-center"><i data-lucide="${e.icon}" class="w-6 h-6 text-${e.color}-500"></i></div><div><h4 class="font-bold text-gray-900">${e.name}</h4><p class="text-xs text-gray-500">${e.label}</p></div></div><button onclick="logExercise('${e.key}', ${e.min})" class="px-4 py-2 bg-${e.color}-500 text-white rounded-full text-sm font-medium check-anim">打卡</button></div>`).join('');
+  // 今日记录 - 支持删除
+  const logs = data.history.exercise.filter(l => l.date === data.today.date);
+  document.getElementById('exerciseLog').innerHTML = logs.length ? logs.map((l, i) => {
+    const exName = data.exerciseConfig.find(e => e.key === l.type)?.name || l.type;
+    return `<div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg"><div><span class="font-medium text-sm">${exName}</span><span class="text-xs text-gray-400 ml-2">${l.time} · ${l.minutes}分钟</span></div><button onclick="deleteExerciseLog(${i})" class="text-xs text-red-400 px-2 py-1 bg-red-50 rounded check-anim">删除</button></div>`;
+  }).join('') : '<p class="text-gray-400 text-xs italic">暂无记录</p>';
+}
+
+function logExercise(type, minutes) {
+  data.today.exercise[type] += minutes;
+  data.history.exercise.push({ id: Date.now(), date: data.today.date, type, minutes, time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'}) });
+  saveData(); renderHome(); renderHealth(); checkMilestones();
+}
+
+function deleteExerciseLog(idx) {
+  if (!confirm('确定删除这条运动记录吗？')) return;
+  const logs = data.history.exercise.filter(l => l.date === data.today.date);
+  const log = logs[idx];
+  if (!log) return;
+  // 回滚今日运动时长
+  data.today.exercise[log.type] = Math.max(0, data.today.exercise[log.type] - log.minutes);
+  // 从history中删除
+  const hIdx = data.history.exercise.findIndex(h => h.id === log.id);
+  if (hIdx >= 0) data.history.exercise.splice(hIdx, 1);
+  saveData(); renderHome(); renderHealth();
+}
+
+// ==================== 健康-管理 ====================
+function setManageTab(tab) {
+  manageTab = tab;
+  ['breakfast','lunch','dinner'].forEach(t => document.getElementById('m-tab-' + t).classList.remove('active'));
+  document.getElementById('m-tab-' + tab).classList.add('active');
+  renderManage();
+}
+
+function renderManage() {
+  const recipes = data.recipes[manageTab] || [];
+  document.getElementById('recipeManageList').innerHTML = recipes.map((r, i) => `<div class="p-3 bg-gray-50 rounded-lg flex justify-between items-center"><div><p class="text-sm font-medium">${r.name}</p><p class="text-xs text-gray-400">${r.items.length}种食材</p></div><div class="flex gap-2"><button onclick="useRecipe('${manageTab}', ${i})" class="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded check-anim">设为今日</button><button onclick="deleteRecipe('${manageTab}', ${i})" class="text-xs px-2 py-1 bg-red-100 text-red-600 rounded check-anim">删除</button></div></div>`).join('');
+  document.getElementById('suppManageList').innerHTML = data.suppConfig.map((s, i) => `<div class="p-3 bg-gray-50 rounded-lg flex justify-between items-center"><div><p class="text-sm font-medium">${s.name}</p><p class="text-xs text-gray-400">${s.dose} · ${s.note}</p></div><button onclick="deleteSupp(${i})" class="text-xs px-2 py-1 bg-red-100 text-red-600 rounded check-anim">删除</button></div>`).join('');
+  document.getElementById('exerciseManageList').innerHTML = data.exerciseConfig.map((e, i) => `<div class="p-3 bg-gray-50 rounded-lg flex justify-between items-center"><div><p class="text-sm font-medium">${e.name}</p><p class="text-xs text-gray-400">${e.min}分钟 · ${e.label}</p></div><button onclick="deleteExercise(${i})" class="text-xs px-2 py-1 bg-red-100 text-red-600 rounded check-anim">删除</button></div>`).join('');
+  lucide.createIcons();
+}
+
+let tempRecipeItems = [];
+function addRecipeItemInput() {
+  tempRecipeItems.push({ icon: 'circle', text: '', color: 'text-gray-500' });
+  renderRecipeItemInputs();
+}
+function renderRecipeItemInputs() {
+  const div = document.getElementById('newRecipeItems');
+  div.innerHTML = tempRecipeItems.map((it, i) => `<div class="flex gap-2"><input type="text" placeholder="食材名称" class="flex-1 p-2 bg-gray-50 rounded-lg text-sm border border-gray-200 recipe-item-text" data-idx="${i}" value="${it.text}"><input type="text" placeholder="图标(如egg)" class="w-24 p-2 bg-gray-50 rounded-lg text-sm border border-gray-200 recipe-item-icon" data-idx="${i}" value="${it.icon}"><button onclick="removeRecipeItem(${i})" class="text-xs text-red-400 px-2">✕</button></div>`).join('');
+}
+function removeRecipeItem(idx) { tempRecipeItems.splice(idx, 1); renderRecipeItemInputs(); }
+
+function addRecipe() {
+  const name = document.getElementById('newRecipeName').value;
+  const time = document.getElementById('newRecipeTime').value;
+  const supp = document.getElementById('newRecipeSupp').value;
+  if (!name) return alert('请填写菜谱名称');
+  const items = [];
+  document.querySelectorAll('.recipe-item-text').forEach((el, i) => {
+    const text = el.value;
+    const icon = document.querySelectorAll('.recipe-item-icon')[i]?.value || 'circle';
+    if (text) items.push({ icon, text, color: 'text-gray-700' });
+  });
+  data.recipes[manageTab].push({ id: Date.now().toString(), name, time, items, suppNote: supp, suppColor: 'blue' });
+  saveData();
+  document.getElementById('newRecipeName').value = '';
+  document.getElementById('newRecipeTime').value = '';
+  document.getElementById('newRecipeSupp').value = '';
+  tempRecipeItems = []; renderRecipeItemInputs();
+  renderManage(); renderHealth();
+}
+
+function useRecipe(meal, idx) {
+  data.today.currentRecipes[meal] = idx;
+  saveData(); alert('已设为今日' + (meal==='breakfast'?'早餐':meal==='lunch'?'午餐':'晚餐')); renderHealth();
+}
+
+function deleteRecipe(meal, idx) {
+  if (!confirm('确定删除这个菜谱吗？')) return;
+  data.recipes[meal].splice(idx, 1);
+  if (data.today.currentRecipes[meal] >= data.recipes[meal].length) data.today.currentRecipes[meal] = 0;
+  saveData(); renderManage(); renderHealth();
+}
+
+function addSupp() {
+  const name = document.getElementById('newSuppName').value;
+  const dose = document.getElementById('newSuppDose').value;
+  const status = document.getElementById('newSuppStatus').value;
+  if (!name) return;
+  const key = 'supp_' + Date.now();
+  data.suppConfig.push({ id: Date.now().toString(), key, name, dose, status, note: '' });
+  data.today.supps[key] = false;
+  saveData();
+  document.getElementById('newSuppName').value = '';
+  document.getElementById('newSuppDose').value = '';
+  renderManage(); renderHealth();
+}
+
+function deleteSupp(idx) {
+  if (!confirm('确定删除这个补剂吗？')) return;
+  const key = data.suppConfig[idx].key;
+  data.suppConfig.splice(idx, 1);
+  delete data.today.supps[key];
+  saveData(); renderManage(); renderHealth(); renderHome();
+}
+
+function addExercise() {
+  const name = document.getElementById('newExName').value;
+  const min = parseInt(document.getElementById('newExMin').value) || 20;
+  if (!name) return;
+  const key = 'ex_' + Date.now();
+  data.exerciseConfig.push({ id: Date.now().toString(), key, name, icon: 'activity', color: 'blue', min, label: min + '分钟' });
+  data.today.exercise[key] = 0;
+  saveData();
+  document.getElementById('newExName').value = '';
+  document.getElementById('newExMin').value = '';
+  renderManage(); renderHealth();
+}
+
+function deleteExercise(idx) {
+  if (!confirm('确定删除这个运动吗？')) return;
+  const key = data.exerciseConfig[idx].key;
+  data.exerciseConfig.splice(idx, 1);
+  delete data.today.exercise[key];
+  saveData(); renderManage(); renderHealth(); renderHome();
+}
+
+function renderHealth() {
+  renderDietCards(); renderSupps(); renderExercise(); lucide.createIcons();
+}
+
+// ==================== 修心-打坐 ====================
+function startTimer() {
+  if (timerRunning) return;
+  timerRunning = true;
+  document.getElementById('btnStart').classList.add('hidden');
+  document.getElementById('btnPause').classList.remove('hidden');
+  document.getElementById('timerStatus').textContent = '打坐中...';
+  document.getElementById('breathCircle').classList.remove('hidden');
+  timerInterval = setInterval(() => {
+    if (timerSeconds > 0) {
+      timerSeconds--;
+      updateTimerDisplay();
+    } else {
+      pauseTimer();
+      completeMeditation();
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  timerRunning = false;
+  clearInterval(timerInterval);
+  document.getElementById('btnStart').classList.remove('hidden');
+  document.getElementById('btnPause').classList.add('hidden');
+  document.getElementById('timerStatus').textContent = '已暂停';
+  document.getElementById('breathCircle').classList.add('hidden');
+}
+
+function resetTimer() {
+  pauseTimer();
+  timerSeconds = 900;
+  updateTimerDisplay();
+  document.getElementById('timerStatus').textContent = '准备开始';
+}
+
+function setTimer(min) {
+  pauseTimer();
+  timerSeconds = min * 60;
+  updateTimerDisplay();
+  document.getElementById('timerStatus').textContent = '准备开始';
+  document.querySelectorAll('#mind-meditate .flex.justify-center.gap-2 button').forEach(btn => {
+    btn.classList.remove('bg-blue-100', 'text-blue-600', 'font-medium');
+    btn.classList.add('bg-gray-100', 'text-gray-600');
+  });
+  event.target.classList.remove('bg-gray-100', 'text-gray-600');
+  event.target.classList.add('bg-blue-100', 'text-blue-600', 'font-medium');
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+  const s = (timerSeconds % 60).toString().padStart(2, '0');
+  document.getElementById('timerDisplay').textContent = m + ':' + s;
+}
+
+function completeMeditation() {
+  const minutes = Math.round((900 - timerSeconds) / 60);
+  if (minutes < 1) return;
+  data.today.meditate.done = true;
+  data.today.meditate.minutes += minutes;
+  data.history.meditate.push({
+    id: Date.now(),
+    date: data.today.date,
+    minutes: minutes,
+    time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})
+  });
+  saveData();
+  renderMind();
+  renderHome();
+  checkMilestones();
+  alert('打坐完成！' + minutes + '分钟');
+}
+
+function renderMeditation() {
+  const todayMin = data.today.meditate.minutes;
+  const monthDays = new Set(data.history.meditate.filter(m => {
+    const d = new Date(m.date);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).map(m => m.date)).size + (data.today.meditate.done ? 1 : 0);
+  document.getElementById('monthDays').textContent = monthDays;
+  document.getElementById('monthBar').style.width = Math.min(monthDays / 30 * 100, 100) + '%';
+  const totalMin = data.history.meditate.reduce((a, b) => a + b.minutes, 0) + todayMin;
+  const totalHours = (totalMin / 60).toFixed(1);
+  document.getElementById('totalHours').textContent = totalHours;
+  document.getElementById('hoursBar').style.width = Math.min(totalHours / 30 * 100, 100) + '%';
+
+  const recent = data.history.meditate.slice(-5).reverse();
+  document.getElementById('meditationHistory').innerHTML = recent.length ? recent.map(m => 
+    `<div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg text-sm"><span>${m.date}</span><span class="font-medium">${m.minutes}分钟</span></div>`
+  ).join('') : '<p class="text-gray-400 text-xs italic">暂无记录</p>';
+
+  const last7 = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    const dayMin = data.history.meditate.filter(m => m.date === ds).reduce((a, b) => a + b.minutes, 0);
+    if (ds === data.today.date) last7.push(dayMin + data.today.meditate.minutes);
+    else last7.push(dayMin);
+  }
+  const maxMin = Math.max(...last7, 30);
+  document.getElementById('meditationChart').innerHTML = last7.map(m => {
+    const h = Math.round((m / maxMin) * 100);
+    return `<div class="flex-1 flex flex-col items-center justify-end gap-1"><div class="w-full bg-indigo-400 rounded-t-md bar-fill" style="height:${Math.max(h, 5)}%"></div></div>`;
+  }).join('');
+}
+
+// ==================== 修心-日记 ====================
+function setEmotion(emoji) {
+  data.today.diary.emotion = emoji;
+  document.getElementById('selectedEmotion').textContent = '已选择：' + emoji;
+  document.querySelectorAll('#emotionColors button').forEach(btn => {
+    btn.classList.remove('ring-2', 'ring-pink-400');
+  });
+  event.target.classList.add('ring-2', 'ring-pink-400');
+}
+
+function saveDiaryManual() {
+  const body = document.getElementById('diaryBody').value;
+  const thing = document.getElementById('diaryThing').value;
+  const emotion = data.today.diary.emotion || '';
+  if (!body && !thing && !emotion) {
+    alert('请至少填写一项');
+    return;
+  }
+  data.today.diary = { body, emotion, thing };
+  saveData();
+  renderDiary();
+  renderHome();
+  alert('日记已保存');
+}
+
+function renderDiary() {
+  const history = data.history.diary.slice(-10).reverse();
+  document.getElementById('diaryHistory').innerHTML = history.length ? history.map((d, idx) => {
+    const realIdx = data.history.diary.length - 1 - idx;
+    return `<div class="p-3 bg-gray-50 rounded-xl" id="diary-item-${realIdx}">
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-xs text-gray-400">${d.date}</span>
+        <div class="flex gap-2">
+          <button onclick="editDiary(${realIdx})" class="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded check-anim">编辑</button>
+          <button onclick="deleteDiary(${realIdx})" class="text-xs px-2 py-1 bg-red-100 text-red-600 rounded check-anim">删除</button>
+        </div>
+      </div>
+      <div class="diary-view">
+        <div class="flex items-center gap-2 mb-1"><span class="text-lg">${d.emotion || ''}</span><span class="text-xs text-gray-400">情绪</span></div>
+        <p class="text-sm text-gray-700 mb-1">${d.body || ''}</p>
+        <p class="text-xs text-gray-500">小事：${d.thing || '无'}</p>
+      </div>
+    </div>`;
+  }).join('') : '<p class="text-gray-400 text-xs italic">暂无记录</p>';
+  if (data.today.diary) {
+    document.getElementById('diaryBody').value = data.today.diary.body || '';
+    document.getElementById('diaryThing').value = data.today.diary.thing || '';
+    if (data.today.diary.emotion) {
+      document.getElementById('selectedEmotion').textContent = '已选择：' + data.today.diary.emotion;
+    }
+  }
+}
+
+function editDiary(idx) {
+  const d = data.history.diary[idx];
+  if (!d) return;
+  const item = document.getElementById('diary-item-' + idx);
+  item.innerHTML = `
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-xs text-gray-400">${d.date}</span>
+      <div class="flex gap-2">
+        <button onclick="saveEditDiary(${idx})" class="text-xs px-2 py-1 bg-green-100 text-green-600 rounded check-anim">保存</button>
+        <button onclick="cancelEditDiary(${idx})" class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded check-anim">取消</button>
+      </div>
+    </div>
+    <div class="space-y-2">
+      <div><label class="text-xs text-gray-500">情绪</label><input type="text" id="edit-diary-emotion-${idx}" value="${d.emotion || ''}" placeholder="如：🟢" class="w-full p-2 bg-white rounded-lg text-sm border border-gray-200 mt-1"></div>
+      <div><label class="text-xs text-gray-500">身体感觉</label><input type="text" id="edit-diary-body-${idx}" value="${d.body || ''}" placeholder="今天身体感觉怎么样？" class="w-full p-2 bg-white rounded-lg text-sm border border-gray-200 mt-1"></div>
+      <div><label class="text-xs text-gray-500">一件小事</label><input type="text" id="edit-diary-thing-${idx}" value="${d.thing || ''}" placeholder="今天有一件值得记录的小事吗？" class="w-full p-2 bg-white rounded-lg text-sm border border-gray-200 mt-1"></div>
+    </div>
+  `;
+}
+
+function cancelEditDiary(idx) {
+  renderDiary();
+}
+
+function saveEditDiary(idx) {
+  const d = data.history.diary[idx];
+  if (!d) return;
+  d.emotion = document.getElementById('edit-diary-emotion-' + idx).value;
+  d.body = document.getElementById('edit-diary-body-' + idx).value;
+  d.thing = document.getElementById('edit-diary-thing-' + idx).value;
+  saveData();
+  renderDiary();
+}
+
+function deleteDiary(idx) {
+  if (!confirm('确定删除这条日记记录吗？')) return;
+  data.history.diary.splice(idx, 1);
+  saveData();
+  renderDiary();
+}
+
+// ==================== 成长-存钱罐 ====================
+function quickSave() {
+  fillSaveAmount(50);
+  document.getElementById('saveTarget').value = 'safety';
+  addCustomSaving();
+}
+
+function fillSaveAmount(amt) {
+  document.getElementById('customSaveAmount').value = amt;
+}
+
+function addCustomSaving() {
+  const amt = parseFloat(document.getElementById('customSaveAmount').value);
+  const target = document.getElementById('saveTarget').value;
+  if (!amt || amt <= 0) return alert('请输入有效金额');
+  data.savings[target] += amt;
+  data.history.savings.push({
+    id: Date.now(),
+    date: data.today.date,
+    amount: amt,
+    target: target,
+    time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})
+  });
+  saveData();
+  document.getElementById('customSaveAmount').value = '';
+  renderSavings();
+  renderHome();
+  checkMilestones();
+}
+
+function renderSavings() {
+  const total = data.savings.safety + data.savings.travel;
+  document.getElementById('totalSavings').textContent = total.toFixed(0);
+  const targetTotal = 70000;
+  document.getElementById('totalSavingsBar').style.width = Math.min(total / targetTotal * 100, 100) + '%';
+  document.getElementById('safetyFund').textContent = data.savings.safety.toFixed(0);
+  document.getElementById('safetyBar').style.width = Math.min(data.savings.safety / 50000 * 100, 100) + '%';
+  document.getElementById('travelFund').textContent = data.savings.travel.toFixed(0);
+  document.getElementById('travelBar').style.width = Math.min(data.savings.travel / 20000 * 100, 100) + '%';
+
+  const logs = data.history.savings.slice(-10).reverse();
+  document.getElementById('savingsLog').innerHTML = logs.length ? logs.map(l => {
+    const targetName = l.target === 'safety' ? '安全感' : '看世界';
+    return `<div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg"><div><span class="font-medium">+¥${l.amount}</span><span class="text-xs text-gray-400 ml-2">${targetName}</span></div><button onclick="deleteSaving(${l.id})" class="text-xs text-red-400 px-2 py-1 bg-red-50 rounded check-anim">删除</button></div>`;
+  }).join('') : '<p class="text-gray-400 text-xs italic">暂无记录</p>';
+}
+
+function deleteSaving(id) {
+  if (!confirm('确定删除这条存入记录吗？')) return;
+  const idx = data.history.savings.findIndex(s => s.id === id);
+  if (idx < 0) return;
+  const log = data.history.savings[idx];
+  data.savings[log.target] = Math.max(0, data.savings[log.target] - log.amount);
+  data.history.savings.splice(idx, 1);
+  saveData();
+  renderSavings();
+  renderHome();
+}
+
+// ==================== 成长-愿望清单 ====================
+function addWish() {
+  const name = document.getElementById('wishName').value;
+  const desc = document.getElementById('wishDesc').value;
+  const target = parseFloat(document.getElementById('wishTarget').value);
+  const deadline = document.getElementById('wishDeadline').value;
+  if (!name) return alert('请输入愿望名称');
+  data.wishes.push({
+    id: Date.now(),
+    name, desc, target: target || 0, deadline,
+    saved: 0,
+    savings: []
+  });
+  saveData();
+  document.getElementById('wishName').value = '';
+  document.getElementById('wishDesc').value = '';
+  document.getElementById('wishTarget').value = '';
+  document.getElementById('wishDeadline').value = '';
+  renderWishes();
+}
+
+function renderWishes() {
+  document.getElementById('wishList').innerHTML = data.wishes.map(w => {
+    const pct = w.target > 0 ? Math.min(w.saved / w.target * 100, 100) : 0;
+    return `<div class="card p-4"><div class="flex justify-between items-start mb-2"><div><h4 class="font-bold text-gray-900">${w.name}</h4><p class="text-xs text-gray-500">${w.desc || ''}</p></div><button onclick="deleteWish(${w.id})" class="text-xs text-red-400 px-2 py-1 bg-red-50 rounded check-anim">删除</button></div><div class="flex justify-between text-sm mb-1"><span>已存 ¥${w.saved.toFixed(0)}</span><span class="text-gray-400">目标 ¥${w.target || 0}</span></div><div class="w-full bg-gray-200 rounded-full h-2 mb-3"><div class="bg-pink-500 h-2 rounded-full transition-all" style="width:${pct}%"></div></div><div class="flex gap-2"><input type="number" id="wishSave_${w.id}" placeholder="存入金额" class="flex-1 p-2 bg-gray-50 rounded-lg text-sm border border-gray-200"><button onclick="saveToWish(${w.id})" class="px-3 bg-pink-500 text-white rounded-lg text-sm check-anim">存入</button><button onclick="showWishSavings(${w.id})" class="px-3 bg-gray-100 text-gray-600 rounded-lg text-sm check-anim">记录</button></div></div>`;
+  }).join('');
+}
+
+function saveToWish(id) {
+  const amt = parseFloat(document.getElementById('wishSave_' + id).value);
+  if (!amt || amt <= 0) return alert('请输入有效金额');
+  const wish = data.wishes.find(w => w.id === id);
+  if (!wish) return;
+  wish.saved += amt;
+  wish.savings.push({ amount: amt, date: data.today.date, time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'}) });
+  saveData();
+  renderWishes();
+  checkMilestones();
+}
+
+function deleteWish(id) {
+  if (!confirm('确定删除这个愿望吗？')) return;
+  data.wishes = data.wishes.filter(w => w.id !== id);
+  saveData();
+  renderWishes();
+}
+
+function showWishSavings(id) {
+  const wish = data.wishes.find(w => w.id === id);
+  if (!wish) return;
+  activeWishId = id;
+  document.getElementById('wishSavingsTitle').textContent = wish.name + ' - 存入记录';
+  document.getElementById('wishSavingsList').innerHTML = wish.savings.length ? wish.savings.map((s, i) => 
+    `<div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg text-sm"><span>${s.date} ${s.time}</span><span class="font-medium">+¥${s.amount}</span><button onclick="deleteWishSaving(${i})" class="text-xs text-red-400 px-2 py-1 bg-red-50 rounded check-anim">删除</button></div>`
+  ).join('') : '<p class="text-gray-400 text-xs italic">暂无记录</p>';
+  document.getElementById('wishSavingsModal').classList.add('show');
+}
+
+function closeWishSavings() {
+  document.getElementById('wishSavingsModal').classList.remove('show');
+  activeWishId = null;
+}
+
+function deleteWishSaving(idx) {
+  if (!confirm('确定删除这条记录吗？')) return;
+  const wish = data.wishes.find(w => w.id === activeWishId);
+  if (!wish || !wish.savings[idx]) return;
+  wish.saved = Math.max(0, wish.saved - wish.savings[idx].amount);
+  wish.savings.splice(idx, 1);
+  saveData();
+  showWishSavings(activeWishId);
+  renderWishes();
+}
+
+// ==================== 成长-成长计划 ====================
+function addGoal(period) {
+  const input = document.getElementById(period + 'GoalInput');
+  const text = input.value.trim();
+  if (!text) return;
+  data.growth[period].push({ id: Date.now(), text, done: false });
+  saveData();
+  input.value = '';
+  renderGoals();
+}
+
+function toggleGoal(period, id) {
+  const goal = data.growth[period].find(g => g.id === id);
+  if (goal) { goal.done = !goal.done; saveData(); renderGoals(); }
+}
+
+function deleteGoal(period, id) {
+  if (!confirm('确定删除这个目标吗？')) return;
+  data.growth[period] = data.growth[period].filter(g => g.id !== id);
+  saveData();
+  renderGoals();
+}
+
+function renderGoals() {
+  ['week', 'month', 'year'].forEach(period => {
+    const container = document.getElementById(period + 'Goals');
+    container.innerHTML = data.growth[period].map(g => 
+      `<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><input type="checkbox" ${g.done ? 'checked' : ''} onchange="toggleGoal('${period}', ${g.id})" class="todo-checkbox"><span class="flex-1 text-sm ${g.done ? 'line-through text-gray-400' : 'text-gray-700'}">${g.text}</span><button onclick="deleteGoal('${period}', ${g.id})" class="text-xs text-red-400 px-2 py-1 bg-red-50 rounded check-anim">删除</button></div>`
+    ).join('');
+  });
+}
+
+function renderMilestones() {
+  const list = document.getElementById('milestonesList');
+  if (!list) return;
+  const ms = data.milestones.slice(-5).reverse();
+  list.innerHTML = ms.length ? ms.map(m => 
+    `<div class="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg"><i data-lucide="award" class="w-4 h-4 text-yellow-600"></i><span class="text-sm text-yellow-800">${m.text}</span></div>`
+  ).join('') : '<p class="text-xs text-gray-400 italic">还没有里程碑，继续加油！</p>';
+  lucide.createIcons();
+}
+
+// ==================== 我的页 ====================
+function renderProfile() {
+  document.getElementById('currentWeightDisplay').textContent = data.today.weight || '--';
+  renderWeightChart();
+  renderPeriods();
+  renderTodos();
+  renderSymptomSliders();
+}
+
+function recordWeight() {
+  const w = parseFloat(document.getElementById('weightInput').value);
+  if (!w || w <= 0) return alert('请输入有效体重');
+  data.today.weight = w;
+  saveData();
+  document.getElementById('weightInput').value = '';
+  renderProfile();
+}
+
+function renderWeightChart() {
+  const weights = data.history.weight.slice(-7);
+  if (data.today.weight) weights.push({ date: data.today.date, weight: data.today.weight });
+  const last7 = weights.slice(-7);
+  if (last7.length === 0) {
+    document.getElementById('weightChart').innerHTML = '<div class="flex-1 flex items-end justify-center text-xs text-gray-400">暂无数据</div>';
+    document.getElementById('weightChartLabels').innerHTML = '';
+    return;
+  }
+  const minW = Math.min(...last7.map(d => d.weight)) - 1;
+  const maxW = Math.max(...last7.map(d => d.weight)) + 1;
+  const range = maxW - minW || 1;
+  document.getElementById('weightChart').innerHTML = last7.map(d => {
+    const h = Math.round(((d.weight - minW) / range) * 100);
+    return `<div class="flex-1 flex flex-col items-center justify-end gap-1"><div class="text-xs text-gray-600 mb-1">${d.weight}</div><div class="w-full bg-blue-400 rounded-t-md bar-fill" style="height:${Math.max(h, 10)}%"></div></div>`;
+  }).join('');
+  document.getElementById('weightChartLabels').innerHTML = last7.map(d => {
+    const parts = d.date.split('-');
+    return `<span>${parseInt(parts[1])}/${parseInt(parts[2])}</span>`;
+  }).join('');
+}
+
+// ==================== 月经记录 ====================
+function addPeriod() {
+  const start = document.getElementById('periodStart').value;
+  const days = parseInt(document.getElementById('periodDays').value);
+  const flow = document.getElementById('periodFlow').value;
+  if (!start) return alert('请选择开始日期');
+  if (!days || days <= 0) return alert('请输入天数');
+  data.periods.push({ id: Date.now(), start, days, flow });
+  saveData();
+  document.getElementById('periodStart').value = '';
+  document.getElementById('periodDays').value = '';
+  document.getElementById('periodFlow').value = '';
+  renderPeriods();
+}
+
+function renderPeriods() {
+  const list = document.getElementById('periodList');
+  const sorted = [...data.periods].sort((a, b) => new Date(b.start) - new Date(a.start));
+  list.innerHTML = sorted.map(p => {
+    const flowText = { light: '量少', normal: '正常', heavy: '量多' }[p.flow] || '';
+    return `<div class="flex justify-between items-center p-3 bg-pink-50 rounded-lg"><div><span class="text-sm font-medium">${p.start}</span><span class="text-xs text-gray-500 ml-2">${p.days}天 ${flowText}</span></div><button onclick="deletePeriod(${p.id})" class="text-xs text-red-400 px-2 py-1 bg-red-50 rounded check-anim">删除</button></div>`;
+  }).join('');
+}
+
+function deletePeriod(id) {
+  if (!confirm('确定删除这条月经记录吗？')) return;
+  data.periods = data.periods.filter(p => p.id !== id);
+  saveData();
+  renderPeriods();
+}
+
+// ==================== 症状追踪 ====================
+function updateSlider(type, val) {
+  document.getElementById(type + 'Val').textContent = val;
+}
+
+function toggleTrigger(key) {
+  if (!data.today.symptoms) data.today.symptoms = { triggers: {} };
+  if (!data.today.symptoms.triggers) data.today.symptoms.triggers = {};
+  data.today.symptoms.triggers[key] = !data.today.symptoms.triggers[key];
+  const btn = document.getElementById('btn-' + key);
+  if (data.today.symptoms.triggers[key]) {
+    btn.classList.remove('bg-gray-50', 'text-gray-600', 'border-gray-200');
+    btn.classList.add('bg-red-100', 'text-red-700', 'border-red-300');
+  } else {
+    btn.classList.remove('bg-red-100', 'text-red-700', 'border-red-300');
+    btn.classList.add('bg-gray-50', 'text-gray-600', 'border-gray-200');
+  }
+  saveData();
+}
+
+function saveSymptomManual() {
+  const symptoms = {
+    fatigue: parseInt(document.getElementById('fatigueSlider').value),
+    fog: parseInt(document.getElementById('fogSlider').value),
+    gut: parseInt(document.getElementById('gutSlider').value),
+    sleep: parseInt(document.getElementById('sleepSlider').value),
+    stress: parseInt(document.getElementById('stressSlider').value),
+    triggers: data.today.symptoms ? (data.today.symptoms.triggers || {}) : {}
+  };
+  data.today.symptoms = symptoms;
+  saveData();
+  alert('症状已记录');
+}
+
+function renderSymptomSliders() {
+  if (!data.today.symptoms) return;
+  const s = data.today.symptoms;
+  if (s.fatigue) { document.getElementById('fatigueSlider').value = s.fatigue; document.getElementById('fatigueVal').textContent = s.fatigue; }
+  if (s.fog) { document.getElementById('fogSlider').value = s.fog; document.getElementById('fogVal').textContent = s.fog; }
+  if (s.gut) { document.getElementById('gutSlider').value = s.gut; document.getElementById('gutVal').textContent = s.gut; }
+  if (s.sleep) { document.getElementById('sleepSlider').value = s.sleep; document.getElementById('sleepVal').textContent = s.sleep; }
+  if (s.stress) { document.getElementById('stressSlider').value = s.stress; document.getElementById('stressVal').textContent = s.stress; }
+  if (s.triggers) {
+    Object.keys(s.triggers).forEach(key => {
+      if (s.triggers[key]) {
+        const btn = document.getElementById('btn-' + key);
+        if (btn) {
+          btn.classList.remove('bg-gray-50', 'text-gray-600', 'border-gray-200');
+          btn.classList.add('bg-red-100', 'text-red-700', 'border-red-300');
+        }
+      }
+    });
+  }
+}
+
+// ==================== 待办检查 ====================
+function addTodo() {
+  const text = document.getElementById('newTodoText').value.trim();
+  const priority = document.getElementById('newTodoPriority').value;
+  if (!text) return;
+  data.todos.push({ id: Date.now(), text, priority, done: false });
+  saveData();
+  document.getElementById('newTodoText').value = '';
+  renderTodos();
+}
+
+function toggleTodo(id) {
+  const todo = data.todos.find(t => t.id === id);
+  if (todo) { todo.done = !todo.done; saveData(); renderTodos(); }
+}
+
+function deleteTodo(id) {
+  if (!confirm('确定删除这个待办吗？')) return;
+  data.todos = data.todos.filter(t => t.id !== id);
+  saveData();
+  renderTodos();
+}
+
+function renderTodos() {
+  const priorityOrder = { urgent: 0, week: 1, suggest: 2 };
+  const priorityColor = { urgent: 'red', week: 'yellow', suggest: 'blue' };
+  const priorityText = { urgent: '紧急', week: '本周', suggest: '建议' };
+  const sorted = [...data.todos].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  document.getElementById('todoList').innerHTML = sorted.map(t => 
+    `<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"><input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodo(${t.id})" class="todo-checkbox"><div class="flex-1"><span class="text-sm ${t.done ? 'line-through text-gray-400' : 'text-gray-700'}">${t.text}</span><span class="text-xs ml-2 px-1.5 py-0.5 rounded bg-${priorityColor[t.priority]}-100 text-${priorityColor[t.priority]}-700">${priorityText[t.priority]}</span></div><button onclick="deleteTodo(${t.id})" class="text-xs text-red-400 px-2 py-1 bg-red-50 rounded check-anim">删除</button></div>`
+  ).join('');
+}
+
+// ==================== 数据管理 ====================
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'nurture_data_' + data.today.date + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function resetAllData() {
+  if (!confirm('确定要重置所有数据吗？此操作不可恢复！')) return;
+  if (!confirm('再次确认：所有数据将被清空，确定吗？')) return;
+  localStorage.removeItem('nurtureAppData');
+  location.reload();
+}
+
+// ==================== 心情 ====================
+function openMoodPicker() {
+  document.getElementById('moodModal').classList.add('show');
+}
+
+function closeMoodPicker() {
+  document.getElementById('moodModal').classList.remove('show');
+}
+
+function setMood(mood) {
+  data.today.mood = mood;
+  saveData();
+  closeMoodPicker();
+  document.getElementById('moodBtn').textContent = mood + ' 已记录';
+  document.getElementById('moodBtn').classList.remove('bg-white', 'border-pink-200', 'text-pink-600');
+  document.getElementById('moodBtn').classList.add('bg-pink-100', 'text-pink-700');
+  renderHome();
+}
+
+// ==================== 里程碑 ====================
+function closeMilestone() {
+  document.getElementById('milestoneModal').classList.remove('show');
+}
+
+function checkMilestones() {
+  const newMilestones = [];
+  const totalMin = Object.values(data.today.exercise).reduce((a,b) => a+b, 0);
+  if (totalMin >= 30 && !data.milestones.find(m => m.key === 'exercise_30')) {
+    newMilestones.push({ key: 'exercise_30', text: '今日运动满30分钟！', encourage: '身体在慢慢变强壮。' });
+  }
+  const dietDone = Object.values(data.today.diet).filter(Boolean).length;
+  if (dietDone === 3 && !data.milestones.find(m => m.key === 'diet_3')) {
+    newMilestones.push({ key: 'diet_3', text: '今日三餐都达标！', encourage: '好好吃饭是对自己最大的温柔。' });
+  }
+  const safeKeys = data.suppConfig.filter(s => s.status === 'safe').map(s => s.key);
+  const suppDone = safeKeys.filter(k => data.today.supps[k]).length;
+  if (suppDone >= 5 && !data.milestones.find(m => m.key === 'supp_5')) {
+    newMilestones.push({ key: 'supp_5', text: '今日补剂全部完成！', encourage: '内在修复正在进行中。' });
+  }
+  if (data.today.meditate.done && !data.milestones.find(m => m.key === 'meditate_1')) {
+    newMilestones.push({ key: 'meditate_1', text: '今日打坐完成！', encourage: '心静则神安。' });
+  }
+  if (data.today.nurtureDone && !data.milestones.find(m => m.key === 'nurture_1')) {
+    newMilestones.push({ key: 'nurture_1', text: '今日养育全部完成！', encourage: '你今天把TA照顾得很好。' });
+  }
+  const totalSavings = data.savings.safety + data.savings.travel;
+  if (totalSavings >= 1000 && !data.milestones.find(m => m.key === 'save_1000')) {
+    newMilestones.push({ key: 'save_1000', text: '累计储蓄突破1000元！', encourage: '安全感在一点点积累。' });
+  }
+  if (totalSavings >= 10000 && !data.milestones.find(m => m.key === 'save_10000')) {
+    newMilestones.push({ key: 'save_10000', text: '累计储蓄突破10000元！', encourage: '你正在为未来建造坚实的地基。' });
+  }
+
+  newMilestones.forEach(m => {
+    data.milestones.push(m);
+    showMilestone(m);
+  });
+  if (newMilestones.length) saveData();
+}
+
+function showMilestone(m) {
+  document.getElementById('milestoneText').textContent = m.text;
+  document.getElementById('milestoneEncourage').textContent = m.encourage;
+  document.getElementById('milestoneModal').classList.add('show');
+}
+
+// ==================== 渲染入口 ====================
+function renderMind() {
+  renderMeditation();
+  renderDiary();
+  lucide.createIcons();
+}
+
+function renderGrow() {
+  renderSavings();
+  renderWishes();
+  renderGoals();
+  renderMilestones();
+  lucide.createIcons();
+}
+
+// ==================== 初始化 ====================
+loadData();
+renderHome();
+lucide.createIcons();
+
+</script>
+</body>
+</html>
